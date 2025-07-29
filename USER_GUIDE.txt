@@ -1,0 +1,79 @@
+====================
+SNAPEEK USER GUIDE
+====================
+
+This project allows you to upload, view, and manage screenshots/images both online (with internet) and offline (from your local machine).
+
+--------------------
+FEATURES
+--------------------
+1. Online Dashboard
+   - View all your images stored in the cloud (MongoDB/Cloudinary).
+   - Organized by categories/folders.
+   - Login/logout functionality.
+   - AI-generated descriptions for images.
+
+2. Offline Gallery
+   - View all images that have been downloaded to your local machine.
+   - Organized by categories/folders.
+   - Works without internet (as long as the backend server is running).
+
+3. Auto-Download
+   - On server start, all images from the cloud are downloaded and organized into folders in `/src/public/images/<category>/`.
+   - You can also trigger a manual download by visiting `http://localhost:5000/images/download-all`.
+
+4. Online/Offline Detection
+   - The app detects your internet connection status.
+   - If you go offline, you are redirected to the offline gallery.
+   - If you are online, you can use the dashboard and all features.
+
+--------------------
+HOW TO USE
+--------------------
+1. Start the backend server:
+   - Open a terminal in the `snapeekBackend` folder.
+   - Run: `npm start` or `node server.js`
+   - The server will connect to MongoDB and download all images for offline use.
+
+2. Start the frontend:
+   - Open a terminal in `snapeekBackend/userside_snapeek_frontend`.
+   - Run: `npm run dev`
+   - Open your browser to `http://localhost:3000`
+
+3. Login and Use the Dashboard:
+   - Login with your credentials.
+   - View, search, and manage your images online.
+   - Use the sidebar to filter by category.
+   - Use the "Offline" link in the navbar to view local images.
+
+4. Offline Usage:
+   - As long as the backend server is running, you can view downloaded images in the offline gallery, even without internet.
+   - If you stop the backend server, offline images will NOT be available.
+
+--------------------
+IMPORTANT NOTES
+--------------------
+- You must keep the backend server running to access offline images.
+- Login and online features require an internet connection (for MongoDB Atlas).
+- Images are organized in `/src/public/images/<category>/` for offline use.
+- The app will automatically redirect you to the offline gallery if you lose internet connection.
+- To refresh images, use the refresh button in the UI or reload the page.
+
+--------------------
+TROUBLESHOOTING
+--------------------
+- If you see "Failed to load categories" or "No images found" in offline mode, make sure the backend server is running and images are downloaded.
+- If you cannot login, check your internet connection and MongoDB Atlas credentials.
+- For any server errors, check the terminal logs in the backend folder.
+
+--------------------
+FOR DEVELOPERS
+--------------------
+- Backend code is in `snapeekBackend/`.
+- Frontend code is in `snapeekBackend/userside_snapeek_frontend/`.
+- Image download logic: `src/utils/downloadAllCloudinaryImages.js`
+- Local image API endpoints: `src/routes/images.js` (`/images/local-categories`, `/images/local-list/:category`)
+- To add new features, edit the respective files in the backend or frontend folders.
+
+--------------------
+Enjoy using Snapeek! 

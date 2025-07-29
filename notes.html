@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Notes Gallery</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f9fa; margin: 0; }
+    .container { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px #0001; padding: 2rem; }
+    h1 { text-align: center; }
+    .notes-list { display: flex; flex-wrap: wrap; gap: 32px; justify-content: flex-start; }
+    .note-card { background: #23243a; border-radius: 16px; box-shadow: 0 2px 12px #0002; padding: 0 0 18px 0; width: 340px; display: flex; flex-direction: column; align-items: stretch; margin-bottom: 24px; }
+    .note-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 0 18px; }
+    .note-title { background: #7c3aed; color: #fff; font-size: 1.05em; font-weight: 500; border-radius: 12px; padding: 4px 16px; max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .note-date { color: #c7c7c7; font-size: 0.95em; display: flex; align-items: center; gap: 4px; }
+    .note-content-preview { background: #fff; border-radius: 12px; margin: 18px 18px 0 18px; padding: 24px 16px; font-size: 1.1em; color: #23243a; min-height: 90px; text-align: center; font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+    .note-actions { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; }
+    .view-btn { background: #a855f7; color: #fff; border: none; border-radius: 8px; padding: 10px 32px; font-size: 1.1em; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .view-btn:hover { background: #7c3aed; }
+    .delete-btn { background: none; border: none; color: #c026d3; font-size: 1.5em; cursor: pointer; transition: color 0.2s; }
+    .delete-btn:hover { color: #dc2626; }
+    .empty-msg { text-align: center; color: #888; margin-top: 40px; }
+
+    /* Modal responsiveness */
+    #noteModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(30,32,44,0.92);
+      z-index: 1000;
+      align-items: center; justify-content: center;
+      overflow-y: auto;
+      padding: 0 8px;
+    }
+    #modalCard {
+      background: #23243a;
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #0006;
+      max-width: 700px;
+      width: 100%;
+      margin: 40px auto;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    #modalImgWrap {
+      background: #23243a;
+      padding: 32px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 220px;
+      min-height: 220px;
+    }
+    #modalImg {
+      max-height: 420px;
+      max-width: 220px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px #0003;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+    #modalCard > div:last-child {
+      flex: 1;
+      background: #fff;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    @media (max-width: 700px) {
+      #modalCard {
+        flex-direction: column;
+        max-width: 98vw;
+        margin: 24px auto;
+      }
+      #modalImgWrap {
+        min-width: 0;
+        min-height: 0;
+        padding: 18px 0 0 0;
+      }
+      #modalImg {
+        max-width: 100%;
+        max-height: 220px;
+      }
+      #modalCard > div:last-child {
+        padding: 18px 12px 24px 12px;
+      }
+    }
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem 2px;
+      }
+      .note-card {
+        width: 98vw;
+        min-width: 0;
+        margin-bottom: 18px;
+      }
+      #modalCard {
+        margin: 8px auto;
+        border-radius: 10px;
+      }
+      #modalCard > div:last-child {
+        padding: 10px 4px 18px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Your Notes</h1>
+      <button id="downloadAllBtn" class="view-btn">Download All Notes</button>
+    </div>
+    <div id="notesList" class="notes-list"></div>
+    <div id="emptyMsg" class="empty-msg" style="display:none;">No notes found. Download notes to see them here.</div>
+  </div>
+  <!-- Modal for full view -->
+  <div id="noteModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(30,32,44,0.92);z-index:1000;align-items:center;justify-content:center;">
+    <div id="modalCard" style="background:#fff;border-radius:18px;box-shadow:0 4px 32px #0006;max-width:1200px;width:98vw;height:80vh;margin:auto;display:flex;flex-direction:row;align-items:stretch;overflow:hidden;position:relative;">
+      <!-- Close Button -->
+      <button id="closeModalBtn" style="position:absolute;top:18px;right:18px;background:none;border:none;color:#7c3aed;font-size:2.2em;cursor:pointer;z-index:2;">&times;</button>
+      <!-- Left: Image -->
+      <div id="modalImgWrap" style="background:#f3f4f6;padding:32px 18px;display:flex;align-items:center;justify-content:center;min-width:340px;max-width:420px;height:100%;">
+        <img id="modalImg" src="" alt="Note Image" style="max-height:70vh;max-width:400px;border-radius:12px;box-shadow:0 2px 12px #0003;object-fit:contain;width:100%;background:#e5e7eb;" />
+      </div>
+      <!-- Right: Details -->
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;height:100%;">
+        <div style="padding:32px 28px 0 28px;">
+          <div style="font-size:1.6em;font-weight:700;color:#7c3aed;margin-bottom:6px;"> <span id="modalTitle"></span> </div>
+          <div style="color:#6b7280;font-size:1.15em;margin-bottom:18px;"> <span id="modalDate"></span> </div>
+        </div>
+        <div id="modalContent" style="margin:0 28px 0 28px;font-size:1.18em;color:#23243a;min-height:120px;max-height:60vh;overflow-y:auto;white-space:pre-line;background:#fff;padding-bottom:18px;"></div>
+        <div style="margin:18px 28px 28px 28px;display:flex;align-items:center;justify-content:flex-end;gap:16px;">
+          <button id="downloadPdfBtn" style="background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:12px 36px;font-size:1.15em;font-weight:500;cursor:pointer;">Download PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function extractField(details, field) {
+      const match = details.match(new RegExp(field + ': (.*)\n'));
+      return match ? match[1] : '';
+    }
+
+    function extractDate(details) {
+      const match = details.match(/Created: ([^\n]+)/);
+      return match ? match[1].split('T')[0] : '';
+    }
+
+    function extractPreview(details) {
+      const match = details.match(/Content:\n([\s\S]*)/);
+      if (match) {
+        let preview = match[1].split('\n')[0];
+        if (preview.length > 60) preview = preview.slice(0, 60) + '...';
+        return preview;
+      }
+      return '';
+    }
+
+    function extractContent(details) {
+      const match = details.match(/Content:\n([\s\S]*)/);
+      return match ? match[1] : '';
+    }
+
+    function extractImage(note) {
+      // Always use note.image for modal, build /notes/api/image?path=...
+      if (note.image) {
+        return '/notes/api/image?path=' + encodeURIComponent(note.image);
+      }
+      return 'https://via.placeholder.com/220x420?text=No+Image';
+    }
+
+    async function fetchNotes() {
+      try {
+        const res = await fetch('/notes');
+        if (!res.ok) throw new Error('Failed to fetch notes');
+        const notes = await res.json();
+        const notesList = document.getElementById('notesList');
+        const emptyMsg = document.getElementById('emptyMsg');
+        notesList.innerHTML = '';
+        if (!notes || notes.length === 0) {
+          emptyMsg.style.display = 'block';
+          return;
+        }
+        emptyMsg.style.display = 'none';
+        notes.forEach(note => {
+          const card = document.createElement('div');
+          card.className = 'note-card';
+          
+          const header = document.createElement('div');
+          header.className = 'note-header';
+          
+          const title = document.createElement('div');
+          title.className = 'note-title';
+          title.textContent = note.subject;
+          header.appendChild(title);
+          
+          const date = document.createElement('div');
+          date.className = 'note-date';
+          date.innerHTML = `<span>📅</span> ${new Date(note.createdAt).toLocaleDateString()}`;
+          header.appendChild(date);
+          
+          card.appendChild(header);
+          
+          const preview = document.createElement('div');
+          preview.className = 'note-content-preview';
+          preview.textContent = note.noteContent.slice(0, 100) + '...';
+          card.appendChild(preview);
+          
+          const actions = document.createElement('div');
+          actions.className = 'note-actions';
+          
+          const viewBtn = document.createElement('button');
+          viewBtn.className = 'view-btn';
+          viewBtn.textContent = '👁️ View Full';
+          viewBtn.onclick = () => showModal(note);
+          actions.appendChild(viewBtn);
+          
+          card.appendChild(actions);
+          notesList.appendChild(card);
+        });
+      } catch (e) {
+        document.getElementById('emptyMsg').textContent = 'Error loading notes: ' + e.message;
+        document.getElementById('emptyMsg').style.display = 'block';
+      }
+    }
+
+    function showModal(note) {
+      document.getElementById('noteModal').style.display = 'flex';
+      document.getElementById('modalImg').src = note.imageUrl;
+      document.getElementById('modalTitle').textContent = note.subject;
+      document.getElementById('modalDate').textContent = new Date(note.createdAt).toLocaleString();
+      document.getElementById('modalContent').innerHTML = marked.parse(note.noteContent);
+      document.getElementById('downloadPdfBtn').onclick = function() {
+        alert('PDF download not implemented yet.');
+      };
+    }
+    document.getElementById('closeModalBtn').onclick = function() {
+      document.getElementById('noteModal').style.display = 'none';
+    };
+
+    async function downloadAllNotes() {
+      const btn = document.getElementById('downloadAllBtn');
+      btn.disabled = true;
+      btn.textContent = 'Downloading...';
+      try {
+        const res = await fetch('/notes/download', { method: 'POST' });
+        const result = await res.json();
+        if (res.ok) {
+          alert(`Download complete! ${result.downloaded} notes downloaded.`);
+        } else {
+          throw new Error(result.error || 'Download failed');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Download All Notes';
+      }
+    }
+
+    document.getElementById('downloadAllBtn').onclick = downloadAllNotes;
+
+    fetchNotes();
+  </script>
+</body>
+</html>

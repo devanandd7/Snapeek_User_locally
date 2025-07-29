@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Offline Image Gallery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        background: #f7f9fa;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #222e3c;
+        color: #fff;
+        padding: 0.5rem 2rem;
+        box-shadow: 0 2px 8px #0001;
+      }
+
+      .navbar .brand {
+        font-size: 1.4rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+      }
+
+      .navbar .nav-items {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .navbar .nav-btn {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+
+      .navbar .nav-btn:hover {
+        background: #007bff;
+        color: #fff;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px #0001;
+        padding: 2rem 1rem 2rem 1rem;
+      }
+
+      .folder-list {
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .folder-btn {
+        margin-right: 0;
+        padding: 8px 16px;
+        background: #eee;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: background 0.2s, color 0.2s;
+      }
+
+      .folder-btn.active {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+      }
+
+      .gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: center;
+      }
+
+      .gallery-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #f3f6fa;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px #0001;
+        padding: 1rem;
+        max-width: 240px;
+        width: 100%;
+        margin-bottom: 1rem;
+        transition: box-shadow 0.2s, transform 0.2s;
+        min-height: 340px;
+        max-height: 340px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .gallery-item:hover {
+        box-shadow: 0 8px 32px #007bff33;
+        transform: translateY(-4px) scale(1.03);
+      }
+
+      .gallery img {
+        max-width: 200px;
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px #0002;
+        background: #fff;
+        margin-bottom: 10px;
+        max-height: 140px;
+        object-fit: cover;
+        cursor: pointer;
+      }
+
+      .desc {
+        margin-top: 0;
+        max-width: 200px;
+        width: 100%;
+        text-align: left;
+        font-size: 1em;
+        color: #333;
+        background: #e9f0fa;
+        border-radius: 6px;
+        padding: 8px 10px;
+        word-break: break-word;
+        overflow-y: auto;
+        flex: 1 1 auto;
+        min-height: 60px;
+        max-height: 120px;
+        box-shadow: 0 1px 2px #0001 inset;
+        margin-bottom: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: #007bff #e9f0fa;
+      }
+
+      .desc::-webkit-scrollbar {
+        width: 6px;
+        background: #e9f0fa;
+      }
+
+      .desc::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 4px;
+      }
+
+      .filename {
+        font-size: 0.92em;
+        color: #888;
+        margin-top: 2px;
+        text-align: center;
+        word-break: break-all;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+      }
+
+      .spinner:after {
+        content: "";
+        width: 40px;
+        height: 40px;
+        border: 5px solid #007bff;
+        border-top: 5px solid #e9f0fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .dropdown {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 24px;
+        position: relative;
+      }
+
+      .dropdown-select {
+        padding: 10px 16px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 1.1rem;
+        background: #f3f6fa;
+        color: #222e3c;
+        min-width: 220px;
+        box-shadow: 0 2px 8px #0001;
+        transition: border 0.2s;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .dropdown-select:focus {
+        border: 1.5px solid #007bff;
+      }
+
+      .dropdown-icon {
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #007bff;
+        font-size: 1.2em;
+      }
+
+      @media (max-width: 700px) {
+        .container {
+          padding: 1rem 0.2rem;
+        }
+
+        .gallery {
+          gap: 12px;
+        }
+
+        .gallery-item {
+          max-width: 98vw;
+          min-height: 260px;
+          max-height: 260px;
+        }
+
+        .gallery img {
+          max-height: 90px;
+        }
+
+        .desc {
+          max-height: 60px;
+          min-height: 40px;
+        }
+
+        .navbar {
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 0.5rem 1rem;
+        }
+
+        .navbar .nav-items {
+          width: 100%;
+          justify-content: flex-end;
+        }
+
+        .dropdown-select {
+          min-width: 120px;
+          font-size: 1em;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="brand">Snapeek Gallery</div>
+      <div class="nav-items">
+        <button class="nav-btn" id="downloadBtn">Download</button>
+        <button class="nav-btn" id="notesBtn" onclick="window.location.href='/notes.html'">Notes</button>
+        <button class="nav-btn" id="loginBtn" style="display: none">Login</button>
+        <button class="nav-btn" id="logoutBtn" style="display: none">Logout</button>
+      </div>
+    </nav>
+    <div class="container">
+      <h1 style="text-align: center; margin-bottom: 1.5rem; color: #222e3c">
+        Offline Image Gallery
+      </h1>
+      <div class="dropdown">
+        <select id="folderDropdown" class="dropdown-select"></select>
+        <span class="dropdown-icon">▼</span>
+      </div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+   
+  </body>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        async function checkLogin() {
+            const res = await fetch('/auth/me', { credentials: 'include' });
+            if (res.status === 200) {
+                document.getElementById('logoutBtn').style.display = '';
+                document.getElementById('loginBtn').style.display = 'none';
+            } else {
+                document.getElementById('logoutBtn').style.display = 'none';
+                document.getElementById('loginBtn').style.display = '';
+            }
+        }
+        checkLogin();
+    
+        document.getElementById('logoutBtn').onclick = async function () {
+            await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+            window.location.reload();
+        };
+    
+        document.getElementById('loginBtn').onclick = function () {
+            window.location.href = '/login';
+        };
+    
+        document.getElementById('downloadBtn').onclick = async function () {
+            const res = await fetch('/auth/me', { credentials: 'include' });
+            if (res.status !== 200) {
+                window.location.href = '/login?download=1';
+                return;
+            }
+            await fetch('/images/api/download', { method: 'POST' });
+            window.location.reload();
+        };
+    
+        async function fetchFolders() {
+            const res = await fetch('/images/api/folders');
+            return res.json();
+        }
+    
+        const folderList = document.getElementById('folderList');
+        const gallery = document.getElementById('gallery');
+        let imageData = {};
+        let folderOptions = [];
+    
+        function createDropdownOptions() {
+            const dropdown = document.getElementById('folderDropdown');
+            dropdown.innerHTML = '';
+            folderOptions = [];
+            let idx = 0;
+            for (const user in imageData) {
+                for (const category in imageData[user]) {
+                    const label = user + ' / ' + category;
+                    const value = user + '||' + category;
+                    folderOptions.push({ user, category, label, value });
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = label;
+                    dropdown.appendChild(option);
+                    idx++;
+                }
+            }
+        }
+    
+        function showImagesByDropdown() {
+            const dropdown = document.getElementById('folderDropdown');
+            const val = dropdown.value;
+            const found = folderOptions.find(opt => opt.value === val);
+            if (found) {
+                showImages(found.user, found.category);
+            }
+        }
+    
+        function showImages(user, category) {
+            gallery.innerHTML = '';
+            imageData[user][category].forEach(imgObj => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'gallery-item';
+    
+                const img = document.createElement('img');
+                img.src = imgObj.url;
+                img.title = imgObj.url.split('/').pop();
+                img.alt = imgObj.description ? imgObj.description.slice(0, 40) : 'Image';
+                img.onclick = () => {
+                    window.open(imgObj.url, '_blank');
+                };
+                wrapper.appendChild(img);
+    
+                if (imgObj.description) {
+                    const desc = document.createElement('div');
+                    desc.className = 'desc';
+                    desc.textContent = imgObj.description;
+                    wrapper.appendChild(desc);
+                }
+    
+                const fname = document.createElement('div');
+                fname.className = 'filename';
+                fname.textContent = imgObj.url.split('/').pop();
+                fname.title = imgObj.url.split('/').pop();
+                wrapper.appendChild(fname);
+    
+                gallery.appendChild(wrapper);
+            });
+        }
+    
+        fetchFolders().then(data => {
+            imageData = data;
+            let firstUser = null, firstCategory = null;
+            for (const user in imageData) {
+                for (const category in imageData[user]) {
+                    if (imageData[user][category] && imageData[user][category].length > 0) {
+                        firstUser = user;
+                        firstCategory = category;
+                        break;
+                    }
+                }
+                if (firstUser) break;
+            }
+    
+            if (!firstUser) {
+                gallery.innerHTML = '<div class="spinner"></div><p style="text-align:center;">No data</p>';
+                document.getElementById('folderDropdown').innerHTML = '';
+            } else {
+                createDropdownOptions();
+                document.getElementById('folderDropdown').onchange = showImagesByDropdown;
+    
+                if (folderOptions.length > 0) {
+                    document.getElementById('folderDropdown').value = folderOptions[0].value;
+                    showImages(folderOptions[0].user, folderOptions[0].category);
+                }
+            }
+        });
+    });
+    </script>
+    
+</html>

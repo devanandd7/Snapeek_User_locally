@@ -1,0 +1,94 @@
+-------------------TODO-------------------------
+for dashboard - 
+
+Recommended Order for Implementation
+Favorites
+Tagging
+Bulk Actions
+Activity Log
+Image Versioning
+
+offline image and description make available
+auto run server
+
+
+
+it works for online mood. here i want that some modification , now  i will delete my all downlloaded datas in public/images . now i want that a small modification in images download , i want that you download the image by createing , user-gmail  folder , menas - i logedin with dev@gmail.com , than previously what you did - you download the images inside the public/images folder like this - by 
+
+public
+      images
+            coding -----category
+                |-snapeek_david_gmail_com_coding_68754e82f5e36b5b404a422c
+
+but now i want that - 
+
+public
+      images
+           david_gmail_com
+                      coding -----category
+                               |-snapeek_david_gmail_com_coding_68754e82f5e36b5b404a422c
+ and if user loged-in with another account than - assume logedin by this email - bubu@gmail.com , than 
+
+
+public
+      images
+           bubu_gmail_com
+                      music-----category
+                               |-snapeek_david_gmail_com_music_68754bddf5e36b5b404a4227
+  
+
+--------------------------------------------------------------------------------------------------
+
+so i want that - create seperate backend code that run loacally. analyze snapeek folder for authentication and cloudinary image download
+1. i created backend with mongodb atlus , so i want to make login system by using that database, you match  the credentails with alrady created in db.
+2. i created backend for image upload on cloudinary and i want to user that cloudinary and store the data in local storage.
+
+
+
+
+cloudinary url - 
+CLOUDINARY_CLOUD_NAME=dtdfmnfr1
+CLOUDINARY_API_KEY=417269152263274
+CLOUDINARY_API_SECRET=s3SpVKlxV-rvK9XmGLhJKNWD0iE
+
+after uploading cloudinary response - 
+
+ const uploadRes = await cloudinary.uploader.upload(imageBase64, {
+        folder: `snapeek/${session.email}/uncategorized`,
+        resource_type: 'image',
+      });   
+
+
+
+mongodb url -MONGODB_URI=mongodb+srv://crosseye315:2Fp2ORwhwuGftlbq@cluster0.xsddsh6.mongodb.net/
+
+after signup - stored cradentails -
+
+_id : objectid(6874eaaf781a7d8272b05503)
+username :
+"dev"
+email :
+"dev@gmail.com"
+password :
+"devdev"
+
+mongodb response- after image uploading
+
+_id :
+68754625f5e36b5b404a4222
+url :
+"https://res.cloudinary.com/dtdfmnfr1/image/upload/v1752516123/snapeek/…"
+public_id :
+"snapeek/dev_gmail_com/identity/rv0h11xezvlibwhichyk"
+userId :
+"dev@gmail.com"
+folder :
+"identity"
+description :
+"An Aadhaar card issued to Devanand Utkarsh on 05/06/2016.  The card co…"
+createdAt :
+2025-07-14T18:02:13.426+00:00
+
+
+now  make system for image download , i want that fetch the all image from cloudinary all images downloaded in public/image folder  with thier ai descrition
+

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Downloading...</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .msg { font-size: 1.2em; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <div class="msg" id="msg">Preparing download...</div>
+  <script>
+    async function doDownload() {
+      if (!window.location.search.includes('download=1')) {
+        window.location.href = '/';
+        return;
+      }
+      document.getElementById('msg').textContent = 'Downloading images and descriptions...';
+      let imageSuccess = false, notesSuccess = false;
+      // Download images
+      try {
+        const res = await fetch('/images/api/download', { method: 'POST' });
+        if (res.status === 200) {
+          imageSuccess = true;
+        } else {
+          const result = await res.json();
+          document.getElementById('msg').textContent = 'Image download failed: ' + (result.error || 'Unknown error');
+        }
+      } catch (e) {
+        document.getElementById('msg').textContent = 'Image download failed: ' + e.message;
+      }
+      // Download notes
+      document.getElementById('msg').textContent = 'Downloading notes and details...';
+      try {
+        const res = await fetch('/notes/api/download', { method: 'POST' });
+        if (res.status === 200) {
+          notesSuccess = true;
+        } else {
+          const result = await res.json();
+          document.getElementById('msg').textContent = 'Notes download failed: ' + (result.error || 'Unknown error');
+        }
+      } catch (e) {
+        document.getElementById('msg').textContent = 'Notes download failed: ' + e.message;
+      }
+      // Final message
+      if (imageSuccess && notesSuccess) {
+        document.getElementById('msg').textContent = 'Images and notes download complete! Redirecting...';
+        setTimeout(() => { window.location.href = '/'; }, 1200);
+      } else if (imageSuccess) {
+        document.getElementById('msg').textContent = 'Images downloaded, but notes failed.';
+      } else if (notesSuccess) {
+        document.getElementById('msg').textContent = 'Notes downloaded, but images failed.';
+      } // else, error message already shown
+    }
+    doDownload();
+  </script>
+</body>
+</html>
